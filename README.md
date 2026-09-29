@@ -52,13 +52,7 @@ npm install --prefix server
 
 2. Create `.env` from `.env.example` and fill in service credentials.
 
-3. Create a PostgreSQL database. The included Docker option uses port `5433` to avoid colliding with any existing local Postgres:
-
-```bash
-docker compose up -d postgres
-```
-
-Then run:
+3. Point `DATABASE_URL` at your existing local PostgreSQL database, then run:
 
 ```bash
 npm run db:schema
