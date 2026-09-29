@@ -5,7 +5,8 @@ import pg from 'pg';
 dotenv.config({ path: path.resolve(process.cwd(), '../.env') });
 dotenv.config();
 
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+const connectionString = process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5433/aurora_market';
+const pool = new pg.Pool({ connectionString });
 
 const categories = [
   ['Audio', 'audio', 'Headphones, earbuds, speakers and creator audio gear.'],

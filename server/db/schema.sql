@@ -127,9 +127,8 @@ create table if not exists payments (
   created_at timestamptz not null default now()
 );
 
-create index if not exists products_search_idx on products using gin (
-  to_tsvector('english', name || ' ' || brand || ' ' || description || ' ' || array_to_string(tags, ' '))
-);
+create index if not exists products_name_idx on products(name);
+create index if not exists products_description_idx on products(description);
 create index if not exists products_category_idx on products(category_id);
 create index if not exists products_brand_idx on products(brand);
 create index if not exists orders_user_idx on orders(user_id, created_at desc);

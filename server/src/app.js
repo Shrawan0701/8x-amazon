@@ -19,7 +19,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const clientDist = path.resolve(__dirname, '../../client/dist');
 
 app.use(helmet());
-app.use(cors({ origin: config.clientUrl, credentials: true }));
+app.use(cors({
+  credentials: true,
+  origin(origin, callback) {
+    if (!origin) return callback(null, true);
+    if (config.clientUrls.includes(origin)) return callback(null, true);
+    return callback(new Error(`CORS origin not allowed: ${origin}`));
+  }
+}));
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
 app.use(morgan(config.nodeEnv === 'production' ? 'combined' : 'dev'));
@@ -57,4 +64,5 @@ app.use((error, _req, res, _next) => {
 
 app.listen(config.port, () => {
   console.log(`Aurora Market API running on http://localhost:${config.port}`);
+  console.log(`CORS allowed origins: ${config.clientUrls.join(', ')}`);
 });

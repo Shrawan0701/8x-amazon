@@ -71,7 +71,7 @@ npm run db:seed
 npm run dev
 ```
 
-The client runs on `http://localhost:5173` and the API on `http://localhost:5000`.
+The client runs on `http://localhost:5174` and the API on `http://localhost:5000`.
 
 ## Environment Variables
 
