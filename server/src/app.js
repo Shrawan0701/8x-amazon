@@ -3,6 +3,9 @@ import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import path from 'path';
+import serveStatic from 'serve-static';
+import { fileURLToPath } from 'url';
 import { config } from './config.js';
 import { attachUser } from './middleware/auth.js';
 import { aiRouter } from './routes/ai.js';
@@ -12,6 +15,8 @@ import { ordersRouter } from './routes/orders.js';
 import { productsRouter } from './routes/products.js';
 
 const app = express();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const clientDist = path.resolve(__dirname, '../../client/dist');
 
 app.use(helmet());
 app.use(cors({ origin: config.clientUrl, credentials: true }));
@@ -29,6 +34,13 @@ app.use('/api/products', productsRouter);
 app.use('/api/cart', cartRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/ai', aiRouter);
+
+if (config.nodeEnv === 'production') {
+  app.use(serveStatic(clientDist));
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(clientDist, 'index.html'));
+  });
+}
 
 app.use((req, res) => {
   res.status(404).json({ message: `No route for ${req.method} ${req.path}` });
