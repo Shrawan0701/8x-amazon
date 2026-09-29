@@ -12,7 +12,6 @@ import { sendOrderConfirmationEmail } from '../services/email.js';
 import { asyncHandler, HttpError, requireEnv } from '../utils/http.js';
 
 export const ordersRouter = express.Router();
-ordersRouter.use(requireAuth);
 
 function razorpay() {
   requireEnv('RAZORPAY_KEY_ID', config.razorpayKeyId);
@@ -24,19 +23,19 @@ function orderNumber() {
   return `AM-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
 }
 
-ordersRouter.get('/', asyncHandler(async (req, res) => {
+ordersRouter.get('/', requireAuth, asyncHandler(async (req, res) => {
   const { rows } = await query('select * from orders where user_id=$1 order by created_at desc', [req.user.id]);
   res.json({ orders: rows });
 }));
 
-ordersRouter.get('/:id', validate(z.object({ params: z.object({ id: z.string().uuid() }) })), asyncHandler(async (req, res) => {
+ordersRouter.get('/:id', requireAuth, validate(z.object({ params: z.object({ id: z.string().uuid() }) })), asyncHandler(async (req, res) => {
   const order = await query('select * from orders where id=$1 and user_id=$2', [req.validated.params.id, req.user.id]);
   if (!order.rowCount) throw new HttpError(404, 'Order not found.');
   const items = await query('select * from order_items where order_id=$1', [req.validated.params.id]);
   res.json({ order: order.rows[0], items: items.rows });
 }));
 
-ordersRouter.post('/create-payment', validate(z.object({
+ordersRouter.post('/create-payment', requireAuth, validate(z.object({
   body: z.object({
     address: z.object({
       fullName: z.string().min(2),
@@ -98,13 +97,14 @@ ordersRouter.post('/verify-payment', validate(z.object({
   if (expected !== body.razorpay_signature) throw new HttpError(400, 'Payment signature verification failed.');
 
   const result = await withTransaction(async (client) => {
-    const orderResult = await client.query('select * from orders where id=$1 and user_id=$2 for update', [body.orderId, req.user.id]);
+    const orderResult = await client.query('select * from orders where id=$1 for update', [body.orderId]);
     const order = orderResult.rows[0];
     if (!order) throw new HttpError(404, 'Order not found.');
+    if (req.user && order.user_id !== req.user.id) throw new HttpError(403, 'Order does not belong to this session.');
     if (order.razorpay_order_id !== body.razorpay_order_id) throw new HttpError(400, 'Payment order mismatch.');
     if (order.payment_status === 'paid') return { order, duplicate: true };
 
-    const cart = await readCart(req.user.id);
+    const cart = await readCart(order.user_id);
     if (!cart.items.length) throw new HttpError(400, 'Cart is empty or already checked out.');
     for (const item of cart.items) {
       await client.query(
@@ -123,10 +123,11 @@ ordersRouter.post('/verify-payment', validate(z.object({
        where order_id=$3`,
       [body.razorpay_payment_id, body.razorpay_signature, order.id]
     );
-    await client.query('delete from cart_items using carts where cart_items.cart_id=carts.id and carts.user_id=$1', [req.user.id]);
+    await client.query('delete from cart_items using carts where cart_items.cart_id=carts.id and carts.user_id=$1', [order.user_id]);
     return { order: updated.rows[0], duplicate: false };
   });
   const items = await query('select * from order_items where order_id=$1', [body.orderId]);
-  if (!result.duplicate) await sendOrderConfirmationEmail(req.user, result.order, items.rows);
+  const user = await query('select id, name, email from users where id=$1', [result.order.user_id]);
+  if (!result.duplicate && user.rows[0]) await sendOrderConfirmationEmail(user.rows[0], result.order, items.rows);
   res.json({ order: result.order, items: items.rows, duplicate: result.duplicate });
 }));

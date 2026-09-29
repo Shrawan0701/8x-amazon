@@ -32,11 +32,20 @@ export function CheckoutPage() {
         description: data.order.order_number,
         order_id: data.razorpayOrder.id,
         handler: async (response) => {
-          const verified = await orderService.verifyPayment({ orderId: data.order.id, ...response });
-          setCart(emptyCart);
-          navigate(`/orders/${verified.data.order.id}`);
+          try {
+            const verified = await orderService.verifyPayment({ orderId: data.order.id, ...response });
+            setCart(emptyCart);
+            navigate(`/orders/${verified.data.order.id}`);
+          } catch (err) {
+            setError(err.response?.data?.message || 'Payment verification failed. Please contact support with your payment ID.');
+            setProcessing(false);
+          }
         },
         modal: { ondismiss: () => setProcessing(false) }
+      });
+      checkout.on('payment.failed', (response) => {
+        setError(response.error?.description || 'Payment failed. Please try again.');
+        setProcessing(false);
       });
       checkout.open();
     } catch (err) {
