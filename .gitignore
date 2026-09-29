@@ -1,0 +1,10 @@
+node_modules/
+dist/
+build/
+.env
+.env.*
+!.env.example
+npm-debug.log*
+.DS_Store
+.codex/hooks/__pycache__/
+*.pyc
