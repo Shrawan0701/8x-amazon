@@ -28,7 +28,7 @@ export function ForgotPasswordPage() {
         {step === 2 && (
           <>
             <label>OTP<input value={form.otp} onChange={(event) => setForm({ ...form, otp: event.target.value })} /></label>
-            <label>New password<input type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} /></label>
+            <label>New password<input type="password" autoComplete="new-password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} /></label>
           </>
         )}
         {message && <p className="notice">{message}</p>}

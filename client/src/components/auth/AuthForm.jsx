@@ -19,7 +19,8 @@ export function AuthForm({ mode }) {
       await refreshCart();
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Authentication failed.');
+      const issue = err.response?.data?.details?.issues?.[0]?.message;
+      setError(issue || err.response?.data?.message || 'Authentication failed.');
     }
   }
 
@@ -28,8 +29,8 @@ export function AuthForm({ mode }) {
       <h1>{isSignup ? 'Create account' : 'Welcome back'}</h1>
       {isSignup && <label>Name<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></label>}
       <label>Email<input type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /></label>
-      <label>Password<input type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} /></label>
-      {isSignup && <label>Confirm password<input type="password" value={form.confirmPassword} onChange={(event) => setForm({ ...form, confirmPassword: event.target.value })} /></label>}
+      <label>Password<input type="password" autoComplete={isSignup ? 'new-password' : 'current-password'} value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} /></label>
+      {isSignup && <label>Confirm password<input type="password" autoComplete="new-password" value={form.confirmPassword} onChange={(event) => setForm({ ...form, confirmPassword: event.target.value })} /></label>}
       {error && <p className="error">{error}</p>}
       <button className="primary wide">{isSignup ? 'Sign up' : 'Log in'}</button>
       <p>{isSignup ? 'Already have an account?' : 'New here?'} <Link to={isSignup ? '/login' : '/signup'}>{isSignup ? 'Log in' : 'Create one'}</Link></p>

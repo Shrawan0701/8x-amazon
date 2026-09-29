@@ -3,6 +3,10 @@ import { config } from './config.js';
 
 const { Pool } = pg;
 
+if (!config.databaseUrl) {
+  throw new Error('DATABASE_URL is not configured. Set it in .env, server/.env, or the server process environment.');
+}
+
 export const pool = new Pool({
   connectionString: config.databaseUrl,
   ssl: config.nodeEnv === 'production' ? { rejectUnauthorized: false } : false

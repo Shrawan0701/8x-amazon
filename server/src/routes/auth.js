@@ -13,13 +13,16 @@ export const authRouter = express.Router();
 
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: true, legacyHeaders: false });
 const otpLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 5, standardHeaders: true, legacyHeaders: false });
+const passwordSchema = z.string()
+  .min(6, 'Password must be at least 6 characters.')
+  .max(128, 'Password must be 128 characters or fewer.');
 
 const signupSchema = z.object({
   body: z.object({
-    name: z.string().trim().min(2),
-    email: z.string().trim().email().toLowerCase(),
-    password: z.string().min(8),
-    confirmPassword: z.string().min(8)
+    name: z.string().trim().min(2, 'Name must be at least 2 characters.'),
+    email: z.string().trim().email('Enter a valid email address.').toLowerCase(),
+    password: passwordSchema,
+    confirmPassword: passwordSchema
   })
 }).refine((data) => data.body.password === data.body.confirmPassword, {
   path: ['body', 'confirmPassword'],
@@ -113,7 +116,7 @@ authRouter.post('/reset-password', otpLimiter, validate(z.object({
   body: z.object({
     email: z.string().trim().email().toLowerCase(),
     otp: z.string().regex(/^\d{6}$/),
-    password: z.string().min(8)
+    password: passwordSchema
   })
 })), asyncHandler(async (req, res) => {
   const { email, otp, password } = req.validated.body;

@@ -8,7 +8,11 @@ export function validate(schema) {
       query: req.query
     });
     if (!parsed.success) {
-      return next(new HttpError(400, 'Please check the highlighted fields.', parsed.error.flatten()));
+      const issues = parsed.error.issues.map((issue) => ({
+        path: issue.path.join('.'),
+        message: issue.message
+      }));
+      return next(new HttpError(400, issues[0]?.message || 'Please check the highlighted fields.', { issues }));
     }
     req.validated = parsed.data;
     return next();
