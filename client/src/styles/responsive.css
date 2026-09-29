@@ -1,0 +1,2 @@
+@media (max-width:900px){.site-header{grid-template-columns:1fr auto}.searchbar{grid-column:1/-1;order:3}.hero-band,.split,.product-detail,.cart-layout{grid-template-columns:1fr}.product-grid,.category-strip,.form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.site-header{padding:12px}.brand span:last-child,.icon-link span{display:none}.hero-band{padding:28px}.product-grid,.category-strip,.form-grid{grid-template-columns:1fr}.cart-item{grid-template-columns:74px 1fr}}
