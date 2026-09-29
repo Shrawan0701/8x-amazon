@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: aurora_market
+    ports:
+      - "5433:5432"
+    volumes:
+      - aurora_postgres:/var/lib/postgresql/data
+
+volumes:
+  aurora_postgres:
