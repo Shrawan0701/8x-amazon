@@ -10,9 +10,10 @@ export function signToken(user) {
 export function setAuthCookie(res, token) {
   res.cookie('token', token, {
     httpOnly: true,
-    sameSite: 'lax',
+    sameSite: 'none',
     secure: config.nodeEnv === 'production',
-    maxAge: 7 * 24 * 60 * 60 * 1000
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    path: '/'
   });
 }
 
