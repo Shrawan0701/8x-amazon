@@ -117,4 +117,11 @@
   .site-footer nav {
     flex-wrap: wrap;
   }
+
+  .toast {
+    left: 14px;
+    right: 14px;
+    top: 84px;
+    width: auto;
+  }
 }

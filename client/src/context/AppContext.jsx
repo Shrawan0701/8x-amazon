@@ -31,7 +31,8 @@ export function AppProvider({ children }) {
   }
 
   function notify(message, type = 'success') {
-    setToast({ message, type });
+    if (!message?.trim()) return;
+    setToast({ message: message.trim(), type });
     setTimeout(() => setToast(null), 2600);
   }
 
@@ -55,7 +56,8 @@ export function AppProvider({ children }) {
     refreshUser,
     addToCart,
     toast,
-    notify
+    notify,
+    clearToast: () => setToast(null)
   }), [user, cart, booting, toast]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

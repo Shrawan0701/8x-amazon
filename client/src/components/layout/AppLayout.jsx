@@ -4,11 +4,11 @@ import { Toast } from '../common/Toast';
 import { Header } from './Header';
 
 export function AppLayout() {
-  const { toast } = useApp();
+  const { toast, clearToast } = useApp();
   return (
     <>
       <Header />
-      <Toast toast={toast} />
+      <Toast toast={toast} onClose={clearToast} />
       <main>
         <Outlet />
       </main>
