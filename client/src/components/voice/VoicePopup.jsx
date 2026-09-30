@@ -211,7 +211,6 @@ export function VoicePopup({ open, onClose }) {
       </button>
       <h3>Voice shopping</h3>
       <p>{state === 'listening' ? 'Listening. I will stop after 3 seconds of silence.' : state === 'processing' ? 'Processing your request...' : 'Tap the mic and say what you want to find.'}</p>
-      {transcript && <p className="notice">Transcript: {transcript}</p>}
       {error && <p className="error">{error}</p>}
     </div>
   );
