@@ -7,7 +7,7 @@ export function AppProvider({ children }) {
   const [user, setUser] = useState(null);
   const [cart, setCart] = useState(emptyCart);
   const [booting, setBooting] = useState(true);
-  const [toast, setToast] = useState('');
+  const [toast, setToast] = useState(null);
 
   async function refreshCart() {
     try {
@@ -30,11 +30,15 @@ export function AppProvider({ children }) {
     }
   }
 
+  function notify(message, type = 'success') {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 2600);
+  }
+
   async function addToCart(productId, quantity = 1) {
     const { data } = await cartService.addItem(productId, quantity);
     setCart(data.cart);
-    setToast('Added to cart');
-    setTimeout(() => setToast(''), 2200);
+    notify('Added to cart');
   }
 
   useEffect(() => {
@@ -50,7 +54,8 @@ export function AppProvider({ children }) {
     refreshCart,
     refreshUser,
     addToCart,
-    toast
+    toast,
+    notify
   }), [user, cart, booting, toast]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

@@ -24,7 +24,21 @@ function orderNumber() {
 }
 
 ordersRouter.get('/', requireAuth, asyncHandler(async (req, res) => {
-  const { rows } = await query('select * from orders where user_id=$1 order by created_at desc', [req.user.id]);
+  const { rows } = await query(
+    `select
+      o.*,
+      count(oi.id)::int as item_count,
+      coalesce(
+        json_agg(oi.image_url order by oi.id) filter (where oi.image_url is not null),
+        '[]'
+      ) as thumbnails
+     from orders o
+     left join order_items oi on oi.order_id=o.id
+     where o.user_id=$1
+     group by o.id
+     order by o.created_at desc`,
+    [req.user.id]
+  );
   res.json({ orders: rows });
 }));
 
@@ -32,7 +46,14 @@ ordersRouter.get('/:id', requireAuth, validate(z.object({ params: z.object({ id:
   const order = await query('select * from orders where id=$1 and user_id=$2', [req.validated.params.id, req.user.id]);
   if (!order.rowCount) throw new HttpError(404, 'Order not found.');
   const items = await query('select * from order_items where order_id=$1', [req.validated.params.id]);
-  res.json({ order: order.rows[0], items: items.rows });
+  const address = order.rows[0].address_id
+    ? await query('select full_name, phone, line1, line2, city, state, postal_code, country from addresses where id=$1 and user_id=$2', [order.rows[0].address_id, req.user.id])
+    : { rows: [] };
+  const payment = await query(
+    'select razorpay_order_id, razorpay_payment_id, amount_cents, status, verified_at from payments where order_id=$1',
+    [req.validated.params.id]
+  );
+  res.json({ order: order.rows[0], items: items.rows, address: address.rows[0] || null, payment: payment.rows[0] || null });
 }));
 
 ordersRouter.post('/create-payment', requireAuth, validate(z.object({

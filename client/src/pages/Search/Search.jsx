@@ -30,12 +30,13 @@ export function SearchPage() {
 
   return (
     <div className="page split">
-      <ProductFilters params={params} facets={facets} onChange={update} />
+      <ProductFilters params={params} facets={facets} onChange={update} onClear={() => setParams(new URLSearchParams())} />
       <section>
         <div className="section-head compact">
           <div>
             <p className="eyebrow">{products.length} results</p>
             <h2>{params.get('q') ? `Search for "${params.get('q')}"` : 'All products'}</h2>
+            <p className="muted">Sort and filter trusted catalog data by price, brand and category.</p>
           </div>
         </div>
         {loading ? <ProductGridSkeleton /> : products.length ? <ProductGrid products={products} /> : <StateMessage title="No products found" text="Try a broader search or remove a filter." />}

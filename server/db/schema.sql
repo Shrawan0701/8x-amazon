@@ -72,6 +72,7 @@ create table if not exists addresses (
   state text not null,
   postal_code text not null,
   country text not null default 'India',
+  is_default boolean not null default false,
   created_at timestamptz not null default now()
 );
 
@@ -131,5 +132,7 @@ create index if not exists products_name_idx on products(name);
 create index if not exists products_description_idx on products(description);
 create index if not exists products_category_idx on products(category_id);
 create index if not exists products_brand_idx on products(brand);
+alter table addresses add column if not exists is_default boolean not null default false;
+create index if not exists addresses_user_idx on addresses(user_id, is_default desc, created_at desc);
 create index if not exists orders_user_idx on orders(user_id, created_at desc);
 create index if not exists otps_user_idx on password_reset_otps(user_id, created_at desc);

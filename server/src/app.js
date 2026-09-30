@@ -8,6 +8,7 @@ import serveStatic from 'serve-static';
 import { fileURLToPath } from 'url';
 import { config } from './config.js';
 import { attachUser } from './middleware/auth.js';
+import { accountRouter } from './routes/account.js';
 import { aiRouter } from './routes/ai.js';
 import { authRouter } from './routes/auth.js';
 import { cartRouter } from './routes/cart.js';
@@ -37,6 +38,7 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.use('/api/auth', authRouter);
+app.use('/api/account', accountRouter);
 app.use('/api/products', productsRouter);
 app.use('/api/cart', cartRouter);
 app.use('/api/orders', ordersRouter);

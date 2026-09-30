@@ -1,2 +1,120 @@
-@media (max-width:900px){.site-header{grid-template-columns:1fr auto}.searchbar{grid-column:1/-1;order:3}.hero-band,.split,.product-detail,.cart-layout{grid-template-columns:1fr}.product-grid,.category-strip,.form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:560px){.site-header{padding:12px}.brand span:last-child,.icon-link span{display:none}.hero-band{padding:28px}.product-grid,.category-strip,.form-grid{grid-template-columns:1fr}.cart-item{grid-template-columns:74px 1fr}}
+@media (max-width: 980px) {
+  .site-header {
+    grid-template-columns: 1fr auto;
+  }
+
+  .searchbar {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+
+  .hero-band,
+  .split,
+  .product-detail,
+  .cart-layout,
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filters,
+  .summary {
+    position: static;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .category-strip,
+  .feature-row,
+  .address-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .profile-hero,
+  .curated-band,
+  .site-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 18px;
+  }
+}
+
+@media (max-width: 680px) {
+  .site-header {
+    padding: 12px;
+  }
+
+  .brand span:last-child,
+  .account-link span {
+    display: none;
+  }
+
+  .nav-actions {
+    gap: 7px;
+  }
+
+  .icon-link,
+  .cart-link {
+    min-height: 40px;
+    padding: 0 10px;
+  }
+
+  .page {
+    padding: 24px 14px 56px;
+  }
+
+  .hero-band {
+    border-radius: 18px;
+    min-height: 0;
+    padding: 28px;
+  }
+
+  .product-grid,
+  .category-strip,
+  .feature-row,
+  .form-grid,
+  .compact-form,
+  .address-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cart-item,
+  .order-row {
+    align-items: start;
+    grid-template-columns: 82px 1fr;
+  }
+
+  .cart-item > strong,
+  .cart-item > button,
+  .cart-item > .qty {
+    grid-column: 2;
+  }
+
+  .order-row {
+    display: grid;
+  }
+
+  .order-row > strong,
+  .order-row > .status-pill {
+    justify-self: start;
+  }
+
+  .order-thumbs {
+    min-width: 0;
+  }
+
+  .section-head,
+  .address-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .voice-text {
+    grid-template-columns: 1fr;
+  }
+
+  .site-footer nav {
+    flex-wrap: wrap;
+  }
+}

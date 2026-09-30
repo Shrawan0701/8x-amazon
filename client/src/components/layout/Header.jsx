@@ -27,6 +27,7 @@ export function Header() {
         <Link to="/voice" className="icon-link" title="Voice search"><Mic size={19} /></Link>
         {user ? (
           <>
+            <Link to="/profile" className="icon-link account-link" title="Profile"><User size={19} /><span>{user.name?.split(' ')[0]}</span></Link>
             <Link to="/orders" className="icon-link" title="Orders"><Package size={19} /></Link>
             <button className="icon-link" onClick={logout} title="Logout"><LogOut size={19} /></button>
           </>

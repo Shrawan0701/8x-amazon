@@ -1,4 +1,4 @@
-export function Toast({ message }) {
-  if (!message) return null;
-  return <div className="toast">{message}</div>;
+export function Toast({ toast }) {
+  if (!toast?.message) return null;
+  return <div className={`toast ${toast.type || 'success'}`}>{toast.message}</div>;
 }

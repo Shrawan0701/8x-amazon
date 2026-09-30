@@ -17,16 +17,34 @@ export function OrderDetailsPage() {
   if (!data) return <StateMessage title="Loading order..." />;
 
   return (
-    <div className="page">
-      <div className="success"><CheckCircle2 size={34} /><div><p className="eyebrow">Confirmed</p><h1>{data.order.order_number}</h1></div></div>
-      <div className="order-items">{data.items.map((item) => (
-        <div className="cart-item" key={item.id}>
-          <img src={item.image_url} alt={item.product_name} />
-          <div><strong>{item.product_name}</strong><p>Qty {item.quantity}</p></div>
-          <strong>{money(item.total_cents)}</strong>
+    <div className="page order-detail-page">
+      <div className="success"><CheckCircle2 size={34} /><div><p className="eyebrow">Confirmed order</p><h1>{data.order.order_number}</h1><p>{new Date(data.order.created_at).toLocaleString()}</p></div></div>
+      <div className="cart-layout">
+        <section className="panel">
+          <h2>Items</h2>
+          <div className="order-items">{data.items.map((item) => (
+            <div className="cart-item" key={item.id}>
+              <img src={item.image_url} alt={item.product_name} />
+              <div><strong>{item.product_name}</strong><p>{item.product_brand} · Qty {item.quantity}</p></div>
+              <strong>{money(item.total_cents)}</strong>
+            </div>
+          ))}</div>
+        </section>
+        <div className="detail-sidebar">
+          <OrderSummary cart={data.order} />
+          <section className="summary info-card">
+            <h3>Delivery</h3>
+            {data.address ? (
+              <p>{data.address.full_name}<br />{data.address.line1}{data.address.line2 ? `, ${data.address.line2}` : ''}<br />{data.address.city}, {data.address.state} {data.address.postal_code}<br />{data.address.country}</p>
+            ) : <p>Address unavailable</p>}
+          </section>
+          <section className="summary info-card">
+            <h3>Payment</h3>
+            <p><span className={`status-pill ${data.order.payment_status}`}>{data.order.payment_status}</span></p>
+            <p>{data.payment?.razorpay_payment_id || data.payment?.razorpay_order_id || 'Payment reference unavailable'}</p>
+          </section>
         </div>
-      ))}</div>
-      <OrderSummary cart={data.order} />
+      </div>
     </div>
   );
 }

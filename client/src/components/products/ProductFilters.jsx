@@ -1,7 +1,7 @@
-export function ProductFilters({ params, facets, onChange }) {
+export function ProductFilters({ params, facets, onChange, onClear }) {
   return (
     <aside className="filters">
-      <h3>Refine</h3>
+      <div className="filter-head"><h3>Refine</h3><button type="button" onClick={onClear}>Clear</button></div>
       <label>Category<select value={params.get('category') || ''} onChange={(event) => onChange('category', event.target.value)}>
         <option value="">All categories</option>
         {(facets.categories || []).map((category) => <option key={category.slug} value={category.slug}>{category.name}</option>)}
@@ -11,6 +11,7 @@ export function ProductFilters({ params, facets, onChange }) {
         {(facets.brands || []).map((brand) => <option key={brand} value={brand}>{brand}</option>)}
       </select></label>
       <label>Max price<input type="number" value={params.get('maxPrice') || ''} onChange={(event) => onChange('maxPrice', event.target.value)} placeholder="5000" /></label>
+      <label>Min price<input type="number" value={params.get('minPrice') || ''} onChange={(event) => onChange('minPrice', event.target.value)} placeholder="1000" /></label>
       <label>Sort<select value={params.get('sort') || 'relevance'} onChange={(event) => onChange('sort', event.target.value)}>
         <option value="relevance">Best match</option>
         <option value="rating">Top rated</option>

@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OrderSummary } from '../../components/checkout/OrderSummary';
 import { useApp } from '../../hooks/useApp';
+import { accountService } from '../../services/accountService';
 import { orderService } from '../../services/orderService';
 
 const initialAddress = { fullName: '', phone: '', line1: '', line2: '', city: '', state: '', postalCode: '', country: 'India' };
@@ -12,6 +13,24 @@ export function CheckoutPage() {
   const [form, setForm] = useState(initialAddress);
   const [error, setError] = useState('');
   const [processing, setProcessing] = useState(false);
+
+  useEffect(() => {
+    accountService.profile().then(({ data }) => {
+      const address = data.addresses?.find((item) => item.is_default) || data.addresses?.[0];
+      if (address) {
+        setForm({
+          fullName: address.full_name,
+          phone: address.phone,
+          line1: address.line1,
+          line2: address.line2 || '',
+          city: address.city,
+          state: address.state,
+          postalCode: address.postal_code,
+          country: address.country
+        });
+      }
+    }).catch(() => {});
+  }, []);
 
   function field(key, value) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -56,7 +75,9 @@ export function CheckoutPage() {
   return (
     <div className="page cart-layout">
       <section>
+        <p className="eyebrow">Secure payment</p>
         <h1>Checkout</h1>
+        <p className="muted">Confirm your delivery details before opening Razorpay checkout.</p>
         <div className="form-grid">
           {[
             ['fullName', 'Full name'], ['phone', 'Phone'], ['line1', 'Address line 1'], ['line2', 'Address line 2'],

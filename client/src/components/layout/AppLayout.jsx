@@ -8,10 +8,21 @@ export function AppLayout() {
   return (
     <>
       <Header />
-      <Toast message={toast} />
+      <Toast toast={toast} />
       <main>
         <Outlet />
       </main>
+      <footer className="site-footer">
+        <div>
+          <strong>Aurora Market</strong>
+          <span>Curated tech, travel, fitness and lifestyle essentials.</span>
+        </div>
+        <nav>
+          <a href="/search">Catalog</a>
+          <a href="/voice">Voice search</a>
+          <a href="/orders">Orders</a>
+        </nav>
+      </footer>
     </>
   );
 }
