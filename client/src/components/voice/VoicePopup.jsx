@@ -17,6 +17,9 @@ export function VoicePopup({ open, onClose }) {
   const audioContextRef = useRef(null);
   const recognitionRef = useRef(null);
   const speechTextRef = useRef('');
+  const noSpeechTimerRef = useRef(null);
+  const processingRef = useRef(false);
+  const suppressRecognitionEndRef = useRef(false);
   const autoStartedRef = useRef(false);
   const [state, setState] = useState('idle');
   const [transcript, setTranscript] = useState('');
@@ -74,15 +77,45 @@ export function VoicePopup({ open, onClose }) {
     frameRef.current = null;
     audioContextRef.current?.close().catch(() => {});
     audioContextRef.current = null;
+    suppressRecognitionEndRef.current = true;
     recognitionRef.current?.stop();
     recognitionRef.current = null;
+    clearTimeout(noSpeechTimerRef.current);
+    noSpeechTimerRef.current = null;
     if (recorderRef.current?.state === 'recording') recorderRef.current.stop();
   }
 
-  function startSpeechRecognition() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
+  async function processSpokenText(text) {
+    const spoken = text.trim();
+    if (processingRef.current) return;
+    if (!spoken) {
+      setError('I did not hear a shopping request. Tap the mic and try again.');
+      setState('idle');
+      return;
+    }
+    processingRef.current = true;
+    setState('processing');
+    try {
+      const { data } = await voiceService.fromText(spoken);
+      await applyIntent(data.intent);
+      setState('idle');
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Voice search failed.');
+      setState('idle');
+    } finally {
+      processingRef.current = false;
+    }
+  }
 
+  function startSpeechRecognitionOnly() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return false;
+
+    clearTimeout(noSpeechTimerRef.current);
+    speechTextRef.current = '';
+    processingRef.current = false;
+    suppressRecognitionEndRef.current = false;
+    heardSpeechRef.current = false;
     const recognition = new SpeechRecognition();
     recognition.lang = 'en-IN';
     recognition.interimResults = true;
@@ -95,12 +128,28 @@ export function VoicePopup({ open, onClose }) {
       if (text) {
         heardSpeechRef.current = true;
         speechTextRef.current = text;
-        setTranscript(text);
+        clearTimeout(noSpeechTimerRef.current);
+        noSpeechTimerRef.current = setTimeout(() => recognition.stop(), 900);
       }
     };
-    recognition.onerror = () => {};
+    recognition.onend = () => {
+      clearTimeout(noSpeechTimerRef.current);
+      recognitionRef.current = null;
+      if (suppressRecognitionEndRef.current) return;
+      processSpokenText(speechTextRef.current);
+    };
+    recognition.onerror = () => {
+      clearTimeout(noSpeechTimerRef.current);
+      recognitionRef.current = null;
+      if (!speechTextRef.current) {
+        setError('I did not hear a shopping request. Tap the mic and try again.');
+        setState('idle');
+      }
+    };
     recognitionRef.current = recognition;
     recognition.start();
+    noSpeechTimerRef.current = setTimeout(() => recognition.stop(), 3000);
+    return true;
   }
 
   function watchSilence(stream) {
@@ -136,6 +185,7 @@ export function VoicePopup({ open, onClose }) {
     setError('');
     setTranscript('');
     setState('listening');
+    if (startSpeechRecognitionOnly()) return;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
@@ -179,7 +229,6 @@ export function VoicePopup({ open, onClose }) {
         }
       };
       recorder.start();
-      startSpeechRecognition();
       watchSilence(stream);
     } catch (err) {
       setError(err.message || 'Microphone access was blocked.');

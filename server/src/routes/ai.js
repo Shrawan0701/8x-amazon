@@ -2,7 +2,6 @@ import express from 'express';
 import multer from 'multer';
 import OpenAI from 'openai';
 import { config } from '../config.js';
-import { requireAuth } from '../middleware/auth.js';
 import { asyncHandler, HttpError, requireEnv } from '../utils/http.js';
 
 export const aiRouter = express.Router();
@@ -91,7 +90,7 @@ function hasActionableIntent(intent) {
   return false;
 }
 
-aiRouter.post('/voice-intent', requireAuth, upload.single('audio'), asyncHandler(async (req, res) => {
+aiRouter.post('/voice-intent', upload.single('audio'), asyncHandler(async (req, res) => {
   if (!req.file) throw new HttpError(400, 'Audio file is required.');
   const file = new File([req.file.buffer], req.file.originalname || 'voice.webm', { type: req.file.mimetype });
   const transcription = await client().audio.transcriptions.create({ model: 'gpt-4o-mini-transcribe', file });
@@ -102,7 +101,7 @@ aiRouter.post('/voice-intent', requireAuth, upload.single('audio'), asyncHandler
   res.json({ transcript, intent });
 }));
 
-aiRouter.post('/text-intent', requireAuth, express.json(), asyncHandler(async (req, res) => {
+aiRouter.post('/text-intent', express.json(), asyncHandler(async (req, res) => {
   const text = String(req.body?.text || '').trim();
   if (!text) throw new HttpError(400, 'Text is required.');
   const intent = normalizeIntent(await extractIntent(text), text);
