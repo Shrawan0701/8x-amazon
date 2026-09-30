@@ -13,6 +13,8 @@ export function VoicePopup({ open, onClose }) {
   const chunksRef = useRef([]);
   const frameRef = useRef(null);
   const silentSinceRef = useRef(null);
+  const heardSpeechRef = useRef(false);
+  const audioContextRef = useRef(null);
   const autoStartedRef = useRef(false);
   const [state, setState] = useState('idle');
   const [transcript, setTranscript] = useState('');
@@ -33,6 +35,10 @@ export function VoicePopup({ open, onClose }) {
       if (intent.maxPrice) params.set('maxPrice', Math.round(intent.maxPrice));
       if (intent.minPrice) params.set('minPrice', Math.round(intent.minPrice));
       if (intent.sort) params.set('sort', intent.sort);
+      if (!params.toString()) {
+        setError('I did not catch a specific product request. Try "show me shoes" or "headphones under 3000".');
+        return;
+      }
       onClose();
       navigate(`/search?${params}`);
       return;
@@ -64,11 +70,14 @@ export function VoicePopup({ open, onClose }) {
   function stopRecording() {
     if (frameRef.current) cancelAnimationFrame(frameRef.current);
     frameRef.current = null;
+    audioContextRef.current?.close().catch(() => {});
+    audioContextRef.current = null;
     if (recorderRef.current?.state === 'recording') recorderRef.current.stop();
   }
 
   function watchSilence(stream) {
     const context = new AudioContext();
+    audioContextRef.current = context;
     const source = context.createMediaStreamSource(stream);
     const analyser = context.createAnalyser();
     const data = new Uint8Array(analyser.fftSize);
@@ -78,10 +87,14 @@ export function VoicePopup({ open, onClose }) {
       analyser.getByteTimeDomainData(data);
       const volume = data.reduce((sum, value) => sum + Math.abs(value - 128), 0) / data.length;
       const now = Date.now();
-      if (volume > 3) silentSinceRef.current = now;
+      if (volume > 6) {
+        heardSpeechRef.current = true;
+        silentSinceRef.current = now;
+      }
       if (!silentSinceRef.current) silentSinceRef.current = now;
       if (now - silentSinceRef.current > 3000) {
         context.close();
+        audioContextRef.current = null;
         stopRecording();
         return;
       }
@@ -100,6 +113,7 @@ export function VoicePopup({ open, onClose }) {
       streamRef.current = stream;
       chunksRef.current = [];
       silentSinceRef.current = Date.now();
+      heardSpeechRef.current = false;
       const recorder = new MediaRecorder(stream);
       recorderRef.current = recorder;
       recorder.ondataavailable = (event) => {
@@ -110,6 +124,11 @@ export function VoicePopup({ open, onClose }) {
         if (frameRef.current) cancelAnimationFrame(frameRef.current);
         streamRef.current?.getTracks().forEach((track) => track.stop());
         try {
+          if (!heardSpeechRef.current) {
+            setError('I did not hear a shopping request. Tap the mic and try again.');
+            setState('idle');
+            return;
+          }
           const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
           const form = new FormData();
           form.append('audio', blob, 'voice.webm');

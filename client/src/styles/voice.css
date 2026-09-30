@@ -15,6 +15,17 @@
   z-index: 45;
 }
 
+@media (max-width: 680px) {
+  .voice-popover {
+    left: 50%;
+    max-width: calc(100vw - 32px);
+    right: auto;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(360px, calc(100vw - 32px));
+  }
+}
+
 .voice-popover h3 {
   font-size: 1.35rem;
 }
