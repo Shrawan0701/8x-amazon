@@ -19,7 +19,6 @@ export function AppLayout() {
         </div>
         <nav>
           <a href="/search">Catalog</a>
-          <a href="/voice">Voice search</a>
           <a href="/orders">Orders</a>
         </nav>
       </footer>

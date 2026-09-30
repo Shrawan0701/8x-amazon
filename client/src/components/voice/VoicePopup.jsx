@@ -1,0 +1,161 @@
+import { Mic, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useApp } from '../../hooks/useApp';
+import { productService } from '../../services/productService';
+import { voiceService } from '../../services/voiceService';
+
+export function VoicePopup({ open, onClose }) {
+  const { addToCart, user, notify } = useApp();
+  const navigate = useNavigate();
+  const recorderRef = useRef(null);
+  const streamRef = useRef(null);
+  const chunksRef = useRef([]);
+  const frameRef = useRef(null);
+  const silentSinceRef = useRef(null);
+  const autoStartedRef = useRef(false);
+  const [state, setState] = useState('idle');
+  const [transcript, setTranscript] = useState('');
+  const [error, setError] = useState('');
+
+  async function applyIntent(intent) {
+    if (intent.intent === 'view_cart') {
+      onClose();
+      navigate('/cart');
+      return;
+    }
+
+    if (intent.intent === 'search_products') {
+      const params = new URLSearchParams();
+      if (intent.query) params.set('q', intent.query);
+      if (intent.brand) params.set('brand', intent.brand);
+      if (intent.category) params.set('category', intent.category);
+      if (intent.maxPrice) params.set('maxPrice', Math.round(intent.maxPrice));
+      if (intent.minPrice) params.set('minPrice', Math.round(intent.minPrice));
+      if (intent.sort) params.set('sort', intent.sort);
+      onClose();
+      navigate(`/search?${params}`);
+      return;
+    }
+
+    if (intent.intent === 'open_product' && intent.productName) {
+      const { data } = await productService.search(`q=${encodeURIComponent(intent.productName)}`);
+      if (data.products?.[0]) {
+        onClose();
+        navigate(`/products/${data.products[0].slug}`);
+      }
+      return;
+    }
+
+    if (intent.intent === 'add_to_cart' && intent.productName) {
+      if (!user) {
+        onClose();
+        navigate('/login');
+        return;
+      }
+      const { data } = await productService.search(`q=${encodeURIComponent(intent.productName)}`);
+      if (data.products?.[0]) {
+        await addToCart(data.products[0].id, intent.quantity || 1);
+        notify('Added from voice command');
+      }
+    }
+  }
+
+  function stopRecording() {
+    if (frameRef.current) cancelAnimationFrame(frameRef.current);
+    frameRef.current = null;
+    if (recorderRef.current?.state === 'recording') recorderRef.current.stop();
+  }
+
+  function watchSilence(stream) {
+    const context = new AudioContext();
+    const source = context.createMediaStreamSource(stream);
+    const analyser = context.createAnalyser();
+    const data = new Uint8Array(analyser.fftSize);
+    source.connect(analyser);
+
+    function tick() {
+      analyser.getByteTimeDomainData(data);
+      const volume = data.reduce((sum, value) => sum + Math.abs(value - 128), 0) / data.length;
+      const now = Date.now();
+      if (volume > 3) silentSinceRef.current = now;
+      if (!silentSinceRef.current) silentSinceRef.current = now;
+      if (now - silentSinceRef.current > 3000) {
+        context.close();
+        stopRecording();
+        return;
+      }
+      frameRef.current = requestAnimationFrame(tick);
+    }
+
+    tick();
+  }
+
+  async function startListening() {
+    setError('');
+    setTranscript('');
+    setState('listening');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      chunksRef.current = [];
+      silentSinceRef.current = Date.now();
+      const recorder = new MediaRecorder(stream);
+      recorderRef.current = recorder;
+      recorder.ondataavailable = (event) => {
+        if (event.data.size) chunksRef.current.push(event.data);
+      };
+      recorder.onstop = async () => {
+        setState('processing');
+        if (frameRef.current) cancelAnimationFrame(frameRef.current);
+        streamRef.current?.getTracks().forEach((track) => track.stop());
+        try {
+          const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+          const form = new FormData();
+          form.append('audio', blob, 'voice.webm');
+          const { data } = await voiceService.fromAudio(form);
+          setTranscript(data.transcript);
+          await applyIntent(data.intent);
+          setState('idle');
+        } catch (err) {
+          setError(err.response?.data?.message || err.message || 'Voice search failed.');
+          setState('idle');
+        }
+      };
+      recorder.start();
+      watchSilence(stream);
+    } catch (err) {
+      setError(err.message || 'Microphone access was blocked.');
+      setState('idle');
+    }
+  }
+
+  function close() {
+    stopRecording();
+    autoStartedRef.current = false;
+    onClose();
+  }
+
+  useEffect(() => {
+    if (open && !autoStartedRef.current) {
+      autoStartedRef.current = true;
+      startListening();
+    }
+    if (!open) autoStartedRef.current = false;
+  }, [open]);
+
+  if (!open) return null;
+
+  return (
+    <div className="voice-popover" role="dialog" aria-label="Voice shopping">
+      <button className="voice-close" onClick={close} title="Close voice shopping"><X size={18} /></button>
+      <button className={`voice-orb ${state}`} onClick={state === 'idle' ? startListening : undefined} disabled={state !== 'idle'} title="Start voice shopping">
+        <Mic size={28} />
+      </button>
+      <h3>Voice shopping</h3>
+      <p>{state === 'listening' ? 'Listening. I will stop after 3 seconds of silence.' : state === 'processing' ? 'Processing your request...' : 'Tap the mic and say what you want to find.'}</p>
+      {transcript && <p className="notice">Transcript: {transcript}</p>}
+      {error && <p className="error">{error}</p>}
+    </div>
+  );
+}

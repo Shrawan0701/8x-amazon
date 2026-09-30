@@ -13,7 +13,6 @@ import { ProductPage } from './pages/Product/Product';
 import { ProfilePage } from './pages/Profile/Profile';
 import { SearchPage } from './pages/Search/Search';
 import { SignupPage } from './pages/Signup/Signup';
-import { VoicePage } from './pages/Voice/Voice';
 import './styles/app.css';
 
 export default function App() {
@@ -32,7 +31,6 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/voice" element={<ProtectedRoute><VoicePage /></ProtectedRoute>} />
         </Route>
       </Routes>
     </AppProvider>

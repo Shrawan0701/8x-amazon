@@ -1,4 +1,3 @@
-import { Mic } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CategoryStrip } from '../../components/products/CategoryStrip';
@@ -23,22 +22,18 @@ export function Home() {
           <p className="hero-copy">A polished marketplace for audio, footwear, home tech, travel and fitness essentials, with voice-powered shopping when typing slows you down.</p>
           <div className="hero-actions">
             <Link className="primary" to="/search">Browse products</Link>
-            <Link className="secondary" to="/voice"><Mic size={18} /> Try voice search</Link>
+            <Link className="secondary" to="/search?maxPrice=5000&sort=rating">Shop top deals</Link>
           </div>
         </div>
         <div className="deal-panel">
           <span>Today&apos;s edit</span>
           <strong>Top-rated gear under Rs 5,000</strong>
           <p>Audio, running and home tech picks with fast checkout.</p>
-          <Link to="/search?maxPrice=5000&sort=rating">Shop the edit</Link>
+          <Link to="/search?maxPrice=5000&sort=rating">Shop</Link>
         </div>
       </section>
       <CategoryStrip />
-      <section className="feature-row">
-        <div><strong>Secure Razorpay</strong><span>Verified server-side payment confirmation.</span></div>
-        <div><strong>Voice shopping</strong><span>Speak searches like "headphones under 3000".</span></div>
-        <div><strong>Real orders</strong><span>Order history, details and confirmation email.</span></div>
-      </section>
+      
       <section className="section-head">
         <div>
           <p className="eyebrow">Featured</p>

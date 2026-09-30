@@ -1,12 +1,15 @@
 import { LogOut, Mic, Package, ShoppingCart, User } from 'lucide-react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../../hooks/useApp';
 import { authService } from '../../services/authService';
 import { emptyCart } from '../../services/cartService';
+import { VoicePopup } from '../voice/VoicePopup';
 import { SearchBar } from './SearchBar';
 
 export function Header() {
   const { user, cart, setUser, setCart } = useApp();
+  const [voiceOpen, setVoiceOpen] = useState(false);
   const navigate = useNavigate();
 
   async function logout() {
@@ -24,7 +27,7 @@ export function Header() {
       </Link>
       <SearchBar />
       <nav className="nav-actions">
-        <Link to="/voice" className="icon-link" title="Voice search"><Mic size={19} /></Link>
+        <button className="icon-link" title="Voice search" onClick={() => setVoiceOpen(true)}><Mic size={19} /></button>
         {user ? (
           <>
             <Link to="/profile" className="icon-link account-link" title="Profile"><User size={19} /><span>{user.name?.split(' ')[0]}</span></Link>
@@ -39,6 +42,7 @@ export function Header() {
           <span>{cart.items?.reduce((sum, item) => sum + item.quantity, 0) || 0}</span>
         </Link>
       </nav>
+      <VoicePopup open={voiceOpen} onClose={() => setVoiceOpen(false)} />
     </header>
   );
 }
