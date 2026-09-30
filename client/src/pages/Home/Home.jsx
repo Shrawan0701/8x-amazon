@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CategoryStrip } from '../../components/products/CategoryStrip';
 import { ProductGrid } from '../../components/products/ProductGrid';
 import { ProductGridSkeleton } from '../../components/products/ProductGridSkeleton';
 import { productService } from '../../services/productService';
@@ -32,7 +31,7 @@ export function Home() {
           <Link to="/search?maxPrice=5000&sort=rating">Shop</Link>
         </div>
       </section>
-      <CategoryStrip />
+      
       
       <section className="section-head">
         <div>

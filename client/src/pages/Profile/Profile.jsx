@@ -1,4 +1,4 @@
-import { Home, Mail, MapPin, ShieldCheck, Trash2 } from 'lucide-react';
+import { Home, MapPin, ShieldCheck, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { StateMessage } from '../../components/common/StateMessage';
@@ -104,10 +104,7 @@ export function ProfilePage() {
           <h1>{profileName}</h1>
           <p>Manage your shopping profile, delivery addresses and account shortcuts.</p>
         </div>
-        <div className="profile-stats">
-          <span><Mail size={16} /> {user.email}</span>
-          <span><ShieldCheck size={16} /> Secure checkout enabled</span>
-        </div>
+     
       </section>
 
       {error && <p className="error">{error}</p>}
