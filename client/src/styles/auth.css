@@ -25,3 +25,20 @@
   line-height: 1.55;
   margin: 0;
 }
+
+.auth-card a {
+  color: var(--link);
+  font-weight: 850;
+  text-decoration: none;
+  width: max-content;
+}
+
+.auth-card a:hover {
+  color: var(--ink);
+}
+
+.auth-card a:focus-visible {
+  border-radius: 8px;
+  box-shadow: 0 0 0 4px rgba(246, 198, 70, .2);
+  outline: 0;
+}
