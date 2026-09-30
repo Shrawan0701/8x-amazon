@@ -6,6 +6,8 @@ import { OrderSummary } from '../../components/checkout/OrderSummary';
 import { orderService } from '../../services/orderService';
 import { money } from '../../utils/money';
 
+const fallbackImage = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160"%3E%3Crect width="160" height="160" rx="20" fill="%23f6f3ec"/%3E%3Cpath d="M49 63h62l-7 48H56l-7-48Z" fill="none" stroke="%23141c1a" stroke-width="8" stroke-linejoin="round"/%3E%3Cpath d="M65 63a15 15 0 0 1 30 0" fill="none" stroke="%23141c1a" stroke-width="8" stroke-linecap="round"/%3E%3C/svg%3E';
+
 export function OrderDetailsPage() {
   const { id } = useParams();
   const [data, setData] = useState(null);
@@ -24,7 +26,7 @@ export function OrderDetailsPage() {
           <h2>Items</h2>
           <div className="order-items">{data.items.map((item) => (
             <div className="cart-item" key={item.id}>
-              <img src={item.image_url} alt={item.product_name} />
+              <img src={item.image_url || fallbackImage} alt={item.product_name} onError={(event) => { event.currentTarget.src = fallbackImage; }} />
               <div><strong>{item.product_name}</strong><p>{item.product_brand} · Qty {item.quantity}</p></div>
               <strong>{money(item.total_cents)}</strong>
             </div>

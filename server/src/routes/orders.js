@@ -29,11 +29,15 @@ ordersRouter.get('/', requireAuth, asyncHandler(async (req, res) => {
       o.*,
       count(oi.id)::int as item_count,
       coalesce(
-        json_agg(oi.image_url order by oi.id) filter (where oi.image_url is not null),
+        json_agg(coalesce(pi.url, nullif(oi.image_url, '')) order by oi.id)
+          filter (where coalesce(pi.url, nullif(oi.image_url, '')) is not null),
         '[]'
       ) as thumbnails
      from orders o
      left join order_items oi on oi.order_id=o.id
+     left join lateral (
+       select url from product_images where product_id=oi.product_id order by position limit 1
+     ) pi on true
      where o.user_id=$1
      group by o.id
      order by o.created_at desc`,
@@ -45,10 +49,29 @@ ordersRouter.get('/', requireAuth, asyncHandler(async (req, res) => {
 ordersRouter.get('/:id', requireAuth, validate(z.object({ params: z.object({ id: z.string().uuid() }) })), asyncHandler(async (req, res) => {
   const order = await query('select * from orders where id=$1 and user_id=$2', [req.validated.params.id, req.user.id]);
   if (!order.rowCount) throw new HttpError(404, 'Order not found.');
-  const items = await query('select * from order_items where order_id=$1', [req.validated.params.id]);
+  const items = await query(
+    `select
+      oi.id, oi.order_id, oi.product_id, oi.product_name, oi.product_brand,
+      coalesce(pi.url, nullif(oi.image_url, '')) as image_url,
+      oi.quantity, oi.unit_price_cents, oi.total_cents
+     from order_items oi
+     left join lateral (
+       select url from product_images where product_id=oi.product_id order by position limit 1
+     ) pi on true
+     where oi.order_id=$1
+     order by oi.id`,
+    [req.validated.params.id]
+  );
   const address = order.rows[0].address_id
-    ? await query('select full_name, phone, line1, line2, city, state, postal_code, country from addresses where id=$1 and user_id=$2', [order.rows[0].address_id, req.user.id])
-    : { rows: [] };
+    ? await query('select full_name, phone, line1, line2, city, state, postal_code, country from addresses where id=$1', [order.rows[0].address_id])
+    : await query(
+      `select full_name, phone, line1, line2, city, state, postal_code, country
+       from addresses
+       where user_id=$1
+       order by is_default desc, created_at desc
+       limit 1`,
+      [req.user.id]
+    );
   const payment = await query(
     'select razorpay_order_id, razorpay_payment_id, amount_cents, status, verified_at from payments where order_id=$1',
     [req.validated.params.id]
