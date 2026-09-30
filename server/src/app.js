@@ -46,7 +46,8 @@ app.use('/api/ai', aiRouter);
 
 if (config.nodeEnv === 'production') {
   app.use(serveStatic(clientDist));
-  app.get('*', (_req, res) => {
+
+  app.get('/{*splat}', (_req, res) => {
     res.sendFile(path.join(clientDist, 'index.html'));
   });
 }
