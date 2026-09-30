@@ -2,13 +2,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OrderSummary } from '../../components/checkout/OrderSummary';
 import { useApp } from '../../hooks/useApp';
-import { emptyCart } from '../../services/cartService';
 import { orderService } from '../../services/orderService';
 
 const initialAddress = { fullName: '', phone: '', line1: '', line2: '', city: '', state: '', postalCode: '', country: 'India' };
 
 export function CheckoutPage() {
-  const { cart, setCart } = useApp();
+  const { cart, refreshCart } = useApp();
   const navigate = useNavigate();
   const [form, setForm] = useState(initialAddress);
   const [error, setError] = useState('');
@@ -34,7 +33,7 @@ export function CheckoutPage() {
         handler: async (response) => {
           try {
             const verified = await orderService.verifyPayment({ orderId: data.order.id, ...response });
-            setCart(emptyCart);
+            await refreshCart();
             navigate(`/orders/${verified.data.order.id}`);
           } catch (err) {
             setError(err.response?.data?.message || 'Payment verification failed. Please contact support with your payment ID.');

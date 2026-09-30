@@ -128,6 +128,12 @@ ordersRouter.post('/verify-payment', validate(z.object({
   });
   const items = await query('select * from order_items where order_id=$1', [body.orderId]);
   const user = await query('select id, name, email from users where id=$1', [result.order.user_id]);
-  if (!result.duplicate && user.rows[0]) await sendOrderConfirmationEmail(user.rows[0], result.order, items.rows);
+  if (!result.duplicate && user.rows[0]) {
+    try {
+      await sendOrderConfirmationEmail(user.rows[0], result.order, items.rows);
+    } catch (error) {
+      console.error('Order confirmation email failed after payment verification:', error.message);
+    }
+  }
   res.json({ order: result.order, items: items.rows, duplicate: result.duplicate });
 }));
