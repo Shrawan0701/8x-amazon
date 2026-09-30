@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useApp } from '../../hooks/useApp';
 import { authService } from '../../services/authService';
 
 export function ForgotPasswordPage() {
+  const { user } = useApp();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({ email: '', otp: '', password: '' });
   const [message, setMessage] = useState('');
@@ -32,7 +34,11 @@ export function ForgotPasswordPage() {
           </>
         )}
         {message && <p className="notice">{message}</p>}
-        {step < 3 ? <button className="primary wide">{step === 1 ? 'Send OTP' : 'Reset password'}</button> : <Link className="primary wide" to="/login">Log in</Link>}
+        {step < 3 ? (
+          <button className="primary wide">{step === 1 ? 'Send OTP' : 'Reset password'}</button>
+        ) : (
+          <Link className="primary wide" to={user ? '/profile' : '/login'}>{user ? 'Back to profile' : 'Log in'}</Link>
+        )}
       </form>
     </div>
   );
