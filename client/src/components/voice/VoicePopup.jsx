@@ -15,6 +15,8 @@ export function VoicePopup({ open, onClose }) {
   const silentSinceRef = useRef(null);
   const heardSpeechRef = useRef(false);
   const audioContextRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const speechTextRef = useRef('');
   const autoStartedRef = useRef(false);
   const [state, setState] = useState('idle');
   const [transcript, setTranscript] = useState('');
@@ -72,7 +74,33 @@ export function VoicePopup({ open, onClose }) {
     frameRef.current = null;
     audioContextRef.current?.close().catch(() => {});
     audioContextRef.current = null;
+    recognitionRef.current?.stop();
+    recognitionRef.current = null;
     if (recorderRef.current?.state === 'recording') recorderRef.current.stop();
+  }
+
+  function startSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-IN';
+    recognition.interimResults = true;
+    recognition.continuous = false;
+    recognition.onresult = (event) => {
+      const text = Array.from(event.results)
+        .map((result) => result[0]?.transcript || '')
+        .join(' ')
+        .trim();
+      if (text) {
+        heardSpeechRef.current = true;
+        speechTextRef.current = text;
+        setTranscript(text);
+      }
+    };
+    recognition.onerror = () => {};
+    recognitionRef.current = recognition;
+    recognition.start();
   }
 
   function watchSilence(stream) {
@@ -114,6 +142,7 @@ export function VoicePopup({ open, onClose }) {
       chunksRef.current = [];
       silentSinceRef.current = Date.now();
       heardSpeechRef.current = false;
+      speechTextRef.current = '';
       const recorder = new MediaRecorder(stream);
       recorderRef.current = recorder;
       recorder.ondataavailable = (event) => {
@@ -124,15 +153,23 @@ export function VoicePopup({ open, onClose }) {
         if (frameRef.current) cancelAnimationFrame(frameRef.current);
         streamRef.current?.getTracks().forEach((track) => track.stop());
         try {
-          if (!heardSpeechRef.current) {
+          const speechText = speechTextRef.current.trim();
+          if (!heardSpeechRef.current && !speechText) {
             setError('I did not hear a shopping request. Tap the mic and try again.');
             setState('idle');
             return;
           }
-          const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-          const form = new FormData();
-          form.append('audio', blob, 'voice.webm');
-          const { data } = await voiceService.fromAudio(form);
+          let data;
+          if (speechText) {
+            const response = await voiceService.fromText(speechText);
+            data = response.data;
+          } else {
+            const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+            const form = new FormData();
+            form.append('audio', blob, 'voice.webm');
+            const response = await voiceService.fromAudio(form);
+            data = response.data;
+          }
           setTranscript(data.transcript);
           await applyIntent(data.intent);
           setState('idle');
@@ -142,6 +179,7 @@ export function VoicePopup({ open, onClose }) {
         }
       };
       recorder.start();
+      startSpeechRecognition();
       watchSilence(stream);
     } catch (err) {
       setError(err.message || 'Microphone access was blocked.');
