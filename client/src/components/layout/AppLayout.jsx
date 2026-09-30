@@ -14,7 +14,7 @@ export function AppLayout() {
       </main>
       <footer className="site-footer">
         <div>
-          <strong>Aurora Market</strong>
+          <strong>ShopKart</strong>
           <span>Curated tech, travel, fitness and lifestyle essentials.</span>
         </div>
         <nav>

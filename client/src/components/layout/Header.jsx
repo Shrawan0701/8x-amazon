@@ -22,8 +22,8 @@ export function Header() {
   return (
     <header className="site-header">
       <Link className="brand" to="/">
-        <span className="brand-mark">A</span>
-        <span>Aurora Market</span>
+        <span className="brand-mark">S</span>
+        <span>ShopKart</span>
       </Link>
       <SearchBar />
       <nav className="nav-actions">

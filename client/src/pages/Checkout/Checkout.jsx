@@ -46,7 +46,7 @@ export function CheckoutPage() {
         key: data.keyId,
         amount: data.razorpayOrder.amount,
         currency: 'INR',
-        name: 'Aurora Market',
+        name: 'ShopKart',
         description: data.order.order_number,
         order_id: data.razorpayOrder.id,
         handler: async (response) => {
